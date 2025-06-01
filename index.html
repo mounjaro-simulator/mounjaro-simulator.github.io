@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mounjaro Blood Level Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: hsl(210, 20%, 96%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px;
+        }
+
+        @media (min-width: 600px) {
+            .container {
+                padding: 12px 24px;
+            }
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-align: center;
+            color: #1f2937;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #374151;
+            line-height: 1.2;
+        }
+
+        .card {
+            background: hsl(210, 30%, 99%);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        @media (min-width: 900px) {
+            .form-grid {
+                grid-template-columns: 2fr 2fr 0.8fr 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date-time-grid {
+            display: grid;
+            grid-template-columns: 1fr 0.8fr;
+            gap: 12px;
+        }
+
+        .dosing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        label {
+            font-size: 0.875rem;
+            margin-bottom: 4px;
+            color: #374151;
+            font-weight: 500;
+            height: 20px;
+        }
+
+        .date-nav-buttons {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .date-nav-btn {
+            background: none;
+            border: 0;
+            cursor: pointer;
+            padding: 4px 3px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 16px;
+            transition: all 0.2s;
+        }
+
+        .date-nav-btn:hover {
+            background: #e9e9eb;
+            border-color: #9ca3af;
+            color: #374151;
+        }
+
+        .date-nav-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            height: 35px;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            padding-left: 32px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: #9ca3af;
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slider-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            flex-wrap: nowrap;
+            min-width: 220px;
+        }
+
+        .clicks-text {
+            white-space: nowrap;
+            min-width: 130px;
+        }
+
+        .actual-dose {
+            display: inline-block;
+            font-size: 0.875rem;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+
+        @media (min-width: 900px) {
+            .slider-label {
+                min-width: 130px;
+            }
+            .actual-dose {
+                display: none;
+            }
+        }
+
+        @media (min-width: 1100px) {
+            .slider-label {
+                min-width: 220px;
+            }
+            .actual-dose {
+                display: inline-block;
+            }
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            /* -webkit-appearance: none; */
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-small {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+
+        .chart-container {
+            height: 320px;
+            margin-bottom: 16px;
+        }
+
+        .chart-placeholder {
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-style: italic;
+            border: 1px dashed #d1d5db;
+            border-radius: 6px;
+        }
+
+        .dose-history {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .dose-item {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .dose-info {
+            flex: 1;
+        }
+
+        .dose-date {
+            font-weight: 500;
+        }
+
+        .dose-amount {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .dose-details {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-left: 8px;
+        }
+
+        .dose-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            color: #6b7280;
+        }
+
+        .icon-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .icon-btn.edit:hover {
+            color: #3b82f6;
+        }
+
+        .icon-btn.delete:hover {
+            color: #ef4444;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #1e40af;
+        }
+
+        .info-box h3 {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            margin-bottom: 8px;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .disclaimer {
+            font-weight: 600;
+        }
+
+        .simulation-controls {
+            display: flex;
+            align-items: start;
+            gap: 8px;
+        }
+
+        .simulation-controls label {
+            font-size: 0.875rem;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .simulation-controls select {
+            width: auto;
+            min-width: 100px;
+        }
+
+        .note {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 16px;
+        }
+
+        .note strong {
+            color: #374151;
+        }
+
+        .empty-state {
+            color: #6b7280;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Mounjaro KwikPen Blood Level Simulator</h1>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 id="form-title">Add New Dose</h2>
+                <button id="cancel-edit-btn" class="btn btn-secondary btn-small" style="display: none;">Cancel Edit</button>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <div class="date-time-grid">
+                        <div class="form-group">
+                            <div style="display: flex; align-items: center;">
+                                <label for="dose-date">Date</label>
+                                <div class="date-nav-buttons">
+                                    <button type="button" class="date-nav-btn" onclick="adjustDate(-7)" title="Previous week">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M15 18l-6-6 6-6M9 18l-6-6 6-6" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="date-nav-btn" onclick="adjustDate(-1)" title="Previous day">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M15 18l-6-6 6-6" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="date-nav-btn" onclick="adjustDate(1)" title="Next day">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M9 18l6-6-6-6" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="date-nav-btn" onclick="adjustDate(7)" title="Next week">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M9 18l6-6-6-6M15 18l6-6-6-6" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="date" id="dose-date" required>
+                                <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="dose-time">Time</label>
+                            <div class="input-wrapper">
+                                <input type="time" id="dose-time" value="10:00" required>
+                                <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dosing-grid">
+                    <div class="form-group">
+                        <label for="dosage">Dosage (mg)</label>
+                        <select id="dosage">
+                            <option value="2.5">2.5 mg</option>
+                            <option value="5">5.0 mg</option>
+                            <option value="7.5">7.5 mg</option>
+                            <option value="10">10.0 mg</option>
+                            <option value="12.5">12.5 mg</option>
+                            <option value="15">15.0 mg</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group slider-container">
+                        <div class="slider-label">
+                            <label class="clicks-text">Clicks Used: <span id="clicks-display">60</span>/60</label>
+                            <span class="actual-dose">(→ <span id="actual-dose">2.5</span> mg)</span>
+                        </div>
+                        <input type="range" id="clicks" min="1" max="60" value="60">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="body-weight">Body weight (kg)</label>
+                    <input type="number" id="body-weight" value="90" min="30" max="400" step="0.1" required>
+                </div>
+
+                <div class="form-group" style="justify-content: flex-end;">
+                    <button id="add-dose-btn" class="btn btn-primary">Add Dose</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Blood Level Simulation</h2>
+                <div class="simulation-controls">
+                    <label for="simulation-days">Look-back Days:</label>
+                    <select id="simulation-days">
+                        <option value="7">7 days</option>
+                        <option value="14">14 days</option>
+                        <option value="30">30 days</option>
+                        <option value="60">60 days</option>
+                        <option value="90">90 days</option>
+                        <option value="all" selected>All time</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="chart-container" class="chart-container">
+                <div class="chart-placeholder">
+                    Add doses to see simulation results
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Dose History</h2>
+                <button id="clear-all-btn" class="btn btn-danger btn-small" style="display: none;">Clear All</button>
+            </div>
+
+            <div id="dose-history" class="dose-history">
+                <div class="empty-state">No doses recorded yet.</div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>About This Simulator</h3>
+            <p>This tool uses a validated two-compartment pharmacokinetic model to simulate tirzepatide blood levels over time based on your dosing history. The "clicks" slider allows you to account for partial doses from a KwikPen (60 clicks = full dose).</p>
+            <p>The model accounts for bioavailability (80%), absorption kinetics, central and peripheral distribution, and clearance mechanisms as in the two-compartment pharmacokinetic model from Schneck and Urva (2024), <i><a href="https://ascpt.onlinelibrary.wiley.com/doi/10.1002/psp4.13099">Population pharmacokinetics of the GIP/GLP receptor agonist tirzepatide</a></i>.</p>
+            <p>Data is automatically saved to your browser's local storage and persists between sessions. They are not uploaded to the internet.</p>
+            <p class="disclaimer"><strong>Disclaimer:</strong> This is an educational tool only and should not be used to make medical decisions. Always follow your healthcare provider's instructions regarding dosing and timing.</p>
+        </div>
+    </div>
+
+    <script>
+        // Application state
+        let doses = [];
+        let editingDose = null;
+        let chart = null;
+
+        // Check localStorage availability
+        function isLocalStorageAvailable() {
+            try {
+                const test = '__localStorage_test__';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        const hasLocalStorage = isLocalStorageAvailable();
+
+        // DOM elements
+        const elements = {
+            formTitle: document.getElementById('form-title'),
+            cancelEditBtn: document.getElementById('cancel-edit-btn'),
+            doseDate: document.getElementById('dose-date'),
+            doseTime: document.getElementById('dose-time'),
+            dosage: document.getElementById('dosage'),
+            clicks: document.getElementById('clicks'),
+            clicksDisplay: document.getElementById('clicks-display'),
+            actualDose: document.getElementById('actual-dose'),
+            addDoseBtn: document.getElementById('add-dose-btn'),
+            simulationDays: document.getElementById('simulation-days'),
+            chartContainer: document.getElementById('chart-container'),
+            doseHistory: document.getElementById('dose-history'),
+            clearAllBtn: document.getElementById('clear-all-btn')
+        };
+
+        // Load data from localStorage
+        function loadDoses() {
+            if (!hasLocalStorage) return;
+
+            try {
+                const saved = localStorage.getItem('mounjaro-doses');
+                if (saved) {
+                    doses = JSON.parse(saved);
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Error loading doses:', error);
+            }
+        }
+
+        // Save data to localStorage
+        function saveDoses() {
+            if (!hasLocalStorage) return;
+
+            try {
+                localStorage.setItem('mounjaro-doses', JSON.stringify(doses));
+            } catch (error) {
+                console.error('Error saving doses:', error);
+            }
+        }
+
+        // Update clicks display and actual dose
+        function updateClicksDisplay() {
+            const clicksValue = parseInt(elements.clicks.value);
+            const dosageValue = parseFloat(elements.dosage.value);
+            const actualDoseValue = (dosageValue * clicksValue / 60).toFixed(2);
+
+            elements.clicksDisplay.textContent = clicksValue;
+            elements.actualDose.textContent = actualDoseValue;
+
+            // Update slider background
+            const percentage = (clicksValue / 60) * 100;
+            elements.clicks.style.background =
+                `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`;
+
+            // Update simulation if there are doses
+            if (doses.length > 0 || (elements.doseDate.value && elements.doseTime.value)) {
+                updateSimulation();
+            }
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        // Format datetime for tooltip
+        function formatDateTimeForTooltip(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Pharmacokinetic simulation
+        function simulateTirzepatide(dosesArray, totalSimulationTimeHours, outputIntervalHours, bodyWeight = 90) {
+            // Model Parameters (normalized to 70kg from paper)
+            const F = 0.8;       // Bioavailability
+            const ka = 0.0373;   // Absorption rate constant (1/h)
+            
+            // Scale parameters by body weight using allometric scaling from paper
+            const weightRatio = bodyWeight / 70;
+            const CL = 0.0329 * Math.pow(weightRatio, 0.8);  // Clearance (L/h)
+            const Q = 0.126 * Math.pow(weightRatio, 0.8);    // Intercompartmental clearance (L/h)
+            const Vc = 2.47 * weightRatio;                   // Volume of central compartment (L)
+            const Vp = 3.98 * weightRatio;                   // Volume of peripheral compartment (L)
+
+            const dt = 0.1; // Time step
+            let currentTime = 0;
+
+            // State Variables
+            let A_depot = 0;
+            let A_central = 0;
+            let A_peripheral = 0;
+
+            const results = [];
+            let nextOutputTime = 0;
+            let doseIndex = 0;
+
+            // Sort doses by time
+            dosesArray.sort((a, b) => a.time - b.time);
+
+            while (currentTime <= totalSimulationTimeHours) {
+                // Apply Doses
+                while (doseIndex < dosesArray.length && dosesArray[doseIndex].time <= currentTime + dt / 2) {
+                    if (dosesArray[doseIndex].time >= currentTime - dt / 2) {
+                        A_depot += dosesArray[doseIndex].amount;
+                        doseIndex++;
+                    } else {
+                        doseIndex++;
+                    }
+                }
+
+                // Calculate rates of change
+                const dA_depot_dt = -ka * A_depot;
+                const conc_central = A_central / Vc;
+                const conc_peripheral = A_peripheral / Vp;
+
+                const dA_central_dt = (F * ka * A_depot) - (CL * conc_central) - (Q * conc_central) + (Q * conc_peripheral);
+                const dA_peripheral_dt = (Q * conc_central) - (Q * conc_peripheral);
+
+                // Update amounts
+                A_depot += dA_depot_dt * dt;
+                A_central += dA_central_dt * dt;
+                A_peripheral += dA_peripheral_dt * dt;
+
+                // Ensure non-negative
+                A_depot = Math.max(0, A_depot);
+                A_central = Math.max(0, A_central);
+                A_peripheral = Math.max(0, A_peripheral);
+
+                // Record results
+                if (currentTime >= nextOutputTime) {
+                    const currentConcentration_ng_mL = (A_central / Vc) * 1000;
+                    results.push({
+                        time: parseFloat(currentTime.toFixed(2)),
+                        concentration: parseFloat(currentConcentration_ng_mL.toFixed(2))
+                    });
+                    nextOutputTime += outputIntervalHours;
+                }
+
+                currentTime += dt;
+            }
+
+            return results;
+        }
+
+        // Calculate blood levels
+        function calculateBloodLevels() {
+            let allDoses = [...doses];
+
+            if (editingDose) {
+                // If editing, the editing dose will be a preview dose
+                allDoses = allDoses.filter(dose => dose.id !== editingDose.id);
+            }
+
+            // Add preview dose if valid input
+            if (elements.doseDate.value && elements.doseTime.value) {
+                const previewDateTime = `${elements.doseDate.value}T${elements.doseTime.value}`;
+                const conflict = doses.find(dose => dose.datetime === previewDateTime);
+                if (!editingDose && conflict
+                    && conflict.datetime == previewDateTime
+                    && conflict.fullDosage == elements.dosage.value
+                    && conflict.clicksUsed == elements.clicks.value) {
+                    // input didn't change anything, no need to add a preview dose
+                } else {
+                    allDoses = allDoses.filter(dose => dose.datetime !== previewDateTime);
+                    const previewDose = {
+                        id: 'preview',
+                        datetime: previewDateTime,
+                        amount: parseFloat((parseFloat(elements.dosage.value) * (parseInt(elements.clicks.value) / 60)).toFixed(2)),
+                        fullDosage: parseFloat(elements.dosage.value),
+                        clicksUsed: parseInt(elements.clicks.value),
+                        isPreview: true
+                    };
+                    allDoses.push(previewDose);
+                }
+            }
+
+            if (allDoses.length === 0) return [];
+
+            // Sort doses by datetime
+            const sortedDoses = allDoses.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+            const earliestDose = new Date(sortedDoses[0].datetime);
+            const latestDose = new Date(sortedDoses[sortedDoses.length - 1].datetime);
+
+            // Computation timespan
+            const computationStartTime = new Date(earliestDose);
+            computationStartTime.setDate(computationStartTime.getDate() - 1);
+
+            const computationEndTime = new Date(latestDose);
+            computationEndTime.setDate(computationEndTime.getDate() + 7);
+
+            // Convert doses for simulation
+            const dosesForSimulation = allDoses.map(dose => {
+                const doseDateTime = new Date(dose.datetime);
+                const timeInHours = (doseDateTime - computationStartTime) / (1000 * 60 * 60);
+                return {
+                    time: Math.max(0, timeInHours),
+                    amount: dose.amount
+                };
+            });
+
+            // Run simulation
+            const totalComputationHours = (computationEndTime - computationStartTime) / (1000 * 60 * 60);
+            const outputInterval = 1;
+            const fullPkResults = simulateTirzepatide(dosesForSimulation, totalComputationHours, outputInterval);
+
+            // Convert to chart format
+            const fullSimulationData = fullPkResults.map(result => ({
+                date: new Date(computationStartTime.getTime() + result.time * 60 * 60 * 1000).toISOString(),
+                bloodLevel: result.concentration / 1000,
+                isPreview: false
+            }));
+
+            // Filter for display
+            let displayStartTime;
+            if (elements.simulationDays.value === 'all') {
+                displayStartTime = computationStartTime;
+            } else {
+                displayStartTime = new Date(latestDose);
+                displayStartTime.setDate(displayStartTime.getDate() - parseInt(elements.simulationDays.value));
+            }
+
+            const displayEndTime = new Date(latestDose);
+            displayEndTime.setDate(displayEndTime.getDate() + 7);
+
+            const simulationData = fullSimulationData.filter(point => {
+                const pointDate = new Date(point.date);
+                const isInDisplayWindow = pointDate >= displayStartTime && pointDate <= displayEndTime;
+
+                if (isInDisplayWindow && allDoses.some(d => d.isPreview)) {
+                    const previewDose = allDoses.find(d => d.isPreview);
+                    if (previewDose) {
+                        const previewTime = new Date(previewDose.datetime);
+                        point.isPreview = pointDate >= previewTime;
+                    }
+                }
+
+                return isInDisplayWindow;
+            });
+
+            return { simulationData, allDoses };
+        }
+
+        // Update simulation chart
+        function updateSimulation() {
+            const { simulationData, allDoses } = calculateBloodLevels();
+
+            if (simulationData.length === 0) {
+                // Show placeholder
+                elements.chartContainer.innerHTML = '<div class="chart-placeholder">Add doses to see simulation results</div>';
+                if (chart) {
+                    chart.dispose();
+                    chart = null;
+                }
+                return;
+            }
+
+            const processPoint = (point) => {
+                const pointTime = new Date(point.date).getTime();
+                // Check if this time point corresponds to a dose
+                const matchingDose = allDoses.find(dose => {
+                    const doseTime = new Date(dose.datetime).getTime();
+                    // Allow for some tolerance (within 1 hour)
+                    return Math.abs(pointTime - doseTime) < 60 * 60 * 500;
+                });
+
+                return [
+                    point.date,
+                    (point.bloodLevel * 1000).toFixed(2),
+                    matchingDose ? matchingDose.amount : null // dose amount for labeling
+                ];
+            };
+
+            // Prepare chart data
+            const times = simulationData.map(point => new Date(point.date));
+            let bloodLevels = simulationData
+                .filter(point => !point.isPreview)
+                .map(processPoint);
+            const previewData = simulationData
+                .filter(point => point.isPreview)
+                .map(processPoint);
+            if (previewData.length >= 1) {
+                // add first preview point to the bloodLevels array for continuity
+                const firstPreview = previewData[0];
+                bloodLevels.push(firstPreview);
+            }
+
+            // Create or update chart
+            if (!chart) {
+                elements.chartContainer.innerHTML = '<div id="echarts-container" style="width: 100%; height: 100%;"></div>';
+                chart = echarts.init(document.getElementById('echarts-container'));
+                const resizeObserver = new ResizeObserver((entries) => {
+                    chart.resize();
+                });
+                resizeObserver.observe(document.getElementById('echarts-container'));
+            }
+
+            const labelOptions = {
+                show: true,
+                position: 'bottom',
+                formatter: function (params) {
+                    // Only show label if there's a dose (params.data[2] exists)
+                    return params.data[2] ? `${params.data[2]} mg` : '';
+                },
+                color: '#374151',
+                fontSize: 11,
+                fontWeight: 'bold',
+                backgroundColor: '#f9fafb',
+                padding: [2, 6],
+                offset: [10, -5]
+            }
+
+            const symbolFunction = function (value, params) {
+                // Show circle for actual doses
+                return params.data[2] ? 'circle' : 'none';
+            };
+
+            const option = {
+                title: {
+                    show: false
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        const date = new Date(params[0].data[0]);
+                        const dateStr = formatDateTimeForTooltip(date.toISOString());
+                        let result = `<strong>${dateStr}</strong><br/>`;
+
+                        params.forEach(param => {
+                            const value = parseFloat(param.data[1]);
+                            const isPreview = param.seriesName === 'Preview';
+                            result += `${param.marker}Blood Level: ${value.toFixed(1)} ng/mL${isPreview ? ' (Preview)' : ''}<br/>`;
+                        });
+
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['Blood Level', 'Preview'],
+                    top: 0
+                },
+                grid: {
+                    left: '25px',
+                    right: '5px',
+                    bottom: '25px',
+                    top: '25px',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'time',
+                    name: 'Date',
+                    nameLocation: 'middle',
+                    nameGap: 30,
+                    axisLabel: {
+                        formatter: function (value) {
+                            const date = new Date(value);
+                            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                        }
+                    },
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Blood Level (ng/mL)',
+                    nameLocation: 'middle',
+                    nameGap: 35,
+                    min: 0,
+                },
+                series: [
+                    {
+                        name: 'Blood Level',
+                        type: 'line',
+                        data: bloodLevels,
+                        smooth: true,
+                        lineStyle: {
+                            color: '#3b82f6',
+                            width: 2
+                        },
+                        itemStyle: {
+                            color: '#3b82f6'
+                        },
+                        symbol: symbolFunction,
+                        label: labelOptions,
+                    }
+                ],
+                animation: false,
+            };
+
+            // Add preview series if there's preview data
+            if (previewData.length > 0) {
+                option.series.push({
+                    name: 'Preview',
+                    type: 'line',
+                    data: previewData,
+                    smooth: true,
+                    lineStyle: {
+                        color: '#f59e0b',
+                        width: 2,
+                    },
+                    itemStyle: {
+                        color: '#f59e0b'
+                    },
+                    symbol: symbolFunction,
+                    label: labelOptions,
+                });
+            }
+
+            chart.setOption(option, true);
+        }
+
+        // Add or update dose
+        function addDose() {
+            if (!elements.doseDate.value || !elements.doseTime.value) {
+                alert('Please select both date and time');
+                return;
+            }
+
+            const actualDose = parseFloat((parseFloat(elements.dosage.value) * (parseInt(elements.clicks.value) / 60)).toFixed(2));
+
+            if (editingDose) {
+                // Update existing dose
+                const doseIndex = doses.findIndex(dose => dose.id === editingDose.id);
+                if (doseIndex !== -1) {
+                    doses[doseIndex] = {
+                        ...doses[doseIndex],
+                        datetime: `${elements.doseDate.value}T${elements.doseTime.value}`,
+                        amount: actualDose,
+                        fullDosage: parseFloat(elements.dosage.value),
+                        clicksUsed: parseInt(elements.clicks.value),
+                        displayDate: `${formatDate(elements.doseDate.value)} ${elements.doseTime.value}`
+                    };
+                }
+                editingDose = null;
+            } else {
+                // Add new dose
+                const newDose = {
+                    id: Date.now(),
+                    datetime: `${elements.doseDate.value}T${elements.doseTime.value}`,
+                    amount: actualDose,
+                    fullDosage: parseFloat(elements.dosage.value),
+                    clicksUsed: parseInt(elements.clicks.value),
+                    displayDate: `${formatDate(elements.doseDate.value)} ${elements.doseTime.value}`
+                };
+                const conflict = doses.find(dose => dose.datetime === newDose.datetime);
+                doses = doses.filter(dose => dose.datetime !== newDose.datetime);
+                doses.push(newDose);
+            }
+
+            // Reset form
+            resetForm();
+            saveDoses();
+            updateUI();
+        }
+
+        // Edit dose
+        function editDose(dose) {
+            const [doseDate, doseTime] = dose.datetime.split('T');
+
+            elements.doseDate.value = doseDate;
+            elements.doseTime.value = doseTime;
+            elements.dosage.value = dose.fullDosage;
+            elements.clicks.value = dose.clicksUsed;
+
+            editingDose = dose;
+
+            elements.formTitle.textContent = 'Edit Dose';
+            elements.addDoseBtn.textContent = 'Update Dose';
+            elements.addDoseBtn.className = 'btn btn-success';
+            elements.cancelEditBtn.style.display = 'block';
+
+            updateClicksDisplay();
+        }
+
+        // Cancel edit
+        function cancelEdit() {
+            editingDose = null;
+            resetForm();
+            updateUI();
+        }
+
+        // Remove dose
+        function removeDose(id) {
+            doses = doses.filter(dose => dose.id !== id);
+            if (editingDose && editingDose.id === id) {
+                editingDose = null;
+                resetForm();
+            }
+            saveDoses();
+            updateUI();
+        }
+
+        // Clear all doses
+        function clearAllDoses() {
+            if (confirm('Are you sure you want to clear all doses? This cannot be undone.')) {
+                doses = [];
+                editingDose = null;
+                resetForm();
+                saveDoses();
+                updateUI();
+            }
+        }
+
+        // Reset form
+        function resetForm() {
+            const lastDose = doses[doses.length - 1];
+            elements.doseDate.value = lastDose.datetime.split('T')[0];
+            elements.doseTime.value = lastDose.datetime.split('T')[1];
+            elements.dosage.value = lastDose.fullDosage;
+            elements.clicks.value = lastDose.clicksUsed;
+            elements.formTitle.textContent = 'Add New Dose';
+            elements.addDoseBtn.textContent = 'Add Dose';
+            elements.addDoseBtn.className = 'btn btn-primary';
+            elements.cancelEditBtn.style.display = 'none';
+            updateClicksDisplay();
+        }
+
+        // Adjust date by specified number of days
+        function adjustDate(days) {
+            const currentDate = elements.doseDate.value ? new Date(elements.doseDate.value) : new Date();
+            currentDate.setDate(currentDate.getDate() + days);
+
+            // Format as YYYY-MM-DD for the input
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentDate.getDate()).padStart(2, '0');
+
+            elements.doseDate.value = `${year}-${month}-${day}`;
+
+            // Trigger change event to update simulation if needed
+            elements.doseDate.dispatchEvent(new Event('change'));
+        }
+
+        // Update dose history display
+        function updateDoseHistory() {
+            if (doses.length === 0) {
+                elements.doseHistory.innerHTML = '<div class="empty-state">No doses recorded yet.</div>';
+                elements.clearAllBtn.style.display = 'none';
+                return;
+            }
+
+            elements.clearAllBtn.style.display = 'block';
+
+            // Sort doses by datetime (most recent first)
+            const sortedDoses = [...doses].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+
+            elements.doseHistory.innerHTML = sortedDoses.map(dose => `
+                <div class="dose-item">
+                    <div class="dose-info">
+                        <div class="dose-date">${dose.displayDate}</div>
+                        <div class="dose-amount">
+                            ${dose.amount} mg
+                            ${dose.clicksUsed < 60 ? `<span class="dose-details">(${dose.clicksUsed}/60 clicks of ${dose.fullDosage} mg pen)</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="dose-actions">
+                        <button class="icon-btn edit" onclick="editDose(${JSON.stringify(dose).replace(/"/g, '&quot;')})" title="Edit dose">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button class="icon-btn delete" onclick="removeDose(${dose.id})" title="Remove dose">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update entire UI
+        function updateUI() {
+            updateDoseHistory();
+            updateSimulation();
+        }
+
+        // Event listeners
+        elements.clicks.addEventListener('input', updateClicksDisplay);
+        elements.dosage.addEventListener('change', updateClicksDisplay);
+        elements.doseDate.addEventListener('change', () => {
+            if (doses.length > 0 || elements.doseTime.value) {
+                updateSimulation();
+            }
+        });
+        elements.doseTime.addEventListener('change', () => {
+            if (doses.length > 0 || elements.doseDate.value) {
+                updateSimulation();
+            }
+        });
+        elements.simulationDays.addEventListener('change', updateSimulation);
+        elements.addDoseBtn.addEventListener('click', addDose);
+        elements.cancelEditBtn.addEventListener('click', cancelEdit);
+        elements.clearAllBtn.addEventListener('click', clearAllDoses);
+
+        // Make functions globally accessible for onclick handlers
+        window.editDose = editDose;
+        window.removeDose = removeDose;
+        window.adjustDate = adjustDate;
+
+        // Initialize app
+        loadDoses();
+        resetForm();
+    </script>
+</body>
+
+</html>
