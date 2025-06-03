@@ -209,13 +209,12 @@
 
         input[type="range"] {
             width: 100%;
-            height: 6px;
+            height: 28px;
             border-radius: 3px;
             outline: none;
-            /* -webkit-appearance: none; */
         }
 
-        input[type="range"]::-webkit-slider-thumb {
+        /* input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 20px;
@@ -232,7 +231,7 @@
             background: #3b82f6;
             cursor: pointer;
             border: none;
-        }
+        } */
 
         .btn {
             padding: 8px 16px;
@@ -391,7 +390,7 @@
 
         .simulation-controls {
             display: flex;
-            align-items: start;
+            align-items: center;
             gap: 8px;
         }
 
@@ -422,11 +421,144 @@
             text-align: center;
             padding: 20px;
         }
+
+        .import-export-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .import-export-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 16px;
+            font-size: 14px;
+            border: 2px dashed #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            background: white;
+            width: 100%;
+            height: auto;
+        }
+
+        .file-input-wrapper:hover .file-input-label {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .file-input-label.dragover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .import-status {
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .import-status.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .import-status.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal h3 {
+            margin: 0 0 16px 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .modal p {
+            margin: 0 0 20px 0;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-export {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
+        <div id="import-modal" class="modal-overlay hidden">
+            <div class="modal">
+                <h3>Import Data</h3>
+                <p>You already have dose data in the app. How would you like to handle the imported data?</p>
+                <div class="modal-actions">
+                    <button id="modal-cancel" class="btn btn-secondary">Cancel</button>
+                    <button id="modal-add" class="btn btn-primary">Add to Existing</button>
+                    <button id="modal-replace" class="btn btn-danger">Replace All</button>
+                </div>
+            </div>
+        </div>
+
         <h1>Mounjaro KwikPen Blood Level Simulator</h1>
 
         <div class="card">
@@ -511,7 +643,7 @@
                 </div>
 
                 <div class="form-group" style="justify-content: flex-end;">
-                    <button id="add-dose-btn" class="btn btn-primary">Add Dose</button>
+                    <button id="add-dose-btn" class="btn btn-primary" style="height: 35px">Add Dose</button>
                 </div>
             </div>
         </div>
@@ -550,6 +682,34 @@
             </div>
         </div>
 
+        <div class="card">
+            <div class="import-export-grid">
+                <div>
+                    <h3 style="margin-bottom: 8px; font-size: 1rem;">Import from Shotsy</h3>
+                    <div class="file-input-wrapper" id="file-input-wrapper">
+                        <input type="file" id="import-file" class="file-input" accept=".csv">
+                        <label for="import-file" class="file-input-label" id="file-input-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 4px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Choose CSV file or drag & drop
+                        </label>
+                    </div>
+                    <div id="import-status" class="import-status hidden"></div>
+                </div>
+
+                <div>
+                    <h3 style="margin-bottom: 8px; font-size: 1rem;">Export Data</h3>
+                    <button id="export-btn" class="btn btn-secondary btn-export" style="width: 100%;">
+                        <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 4px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Export to CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="info-box">
             <h3>About This Simulator</h3>
             <p>This tool uses a validated two-compartment pharmacokinetic model to simulate tirzepatide blood levels over time based on your dosing history. The "clicks" slider allows you to account for partial doses from a KwikPen (60 clicks = full dose).</p>
@@ -564,6 +724,7 @@
         let doses = [];
         let editingDose = null;
         let chart = null;
+        let pendingImportData = null;
 
         // Check localStorage availability
         function isLocalStorageAvailable() {
@@ -593,26 +754,34 @@
             simulationDays: document.getElementById('simulation-days'),
             chartContainer: document.getElementById('chart-container'),
             doseHistory: document.getElementById('dose-history'),
-            clearAllBtn: document.getElementById('clear-all-btn')
+            clearAllBtn: document.getElementById('clear-all-btn'),
+            importFile: document.getElementById('import-file'),
+            fileInputWrapper: document.getElementById('file-input-wrapper'),
+            fileInputLabel: document.getElementById('file-input-label'),
+            importStatus: document.getElementById('import-status'),
+            exportBtn: document.getElementById('export-btn'),
+            importModal: document.getElementById('import-modal'),
+            modalCancel: document.getElementById('modal-cancel'),
+            modalAdd: document.getElementById('modal-add'),
+            modalReplace: document.getElementById('modal-replace')
         };
 
         // Load data from localStorage
-        function loadDoses() {
+        function loadData() {
             if (!hasLocalStorage) return;
 
             try {
-                const saved = localStorage.getItem('mounjaro-doses');
-                if (saved) {
-                    doses = JSON.parse(saved);
-                    updateUI();
+                const savedDoses = localStorage.getItem('mounjaro-doses');
+                if (savedDoses) {
+                    doses = JSON.parse(savedDoses);
                 }
             } catch (error) {
-                console.error('Error loading doses:', error);
+                console.error('Error loading data:', error);
             }
         }
 
         // Save data to localStorage
-        function saveDoses() {
+        function saveData() {
             if (!hasLocalStorage) return;
 
             try {
@@ -758,6 +927,7 @@
                         amount: parseFloat((parseFloat(elements.dosage.value) * (parseInt(elements.clicks.value) / 60)).toFixed(2)),
                         fullDosage: parseFloat(elements.dosage.value),
                         clicksUsed: parseInt(elements.clicks.value),
+                        bodyWeight: parseWeight(elements.bodyWeight.value || 90),
                         isPreview: true
                     };
                     allDoses.push(previewDose);
@@ -835,7 +1005,6 @@
             const { simulationData, allDoses } = calculateBloodLevels();
 
             if (simulationData.length === 0) {
-                // Show placeholder
                 elements.chartContainer.innerHTML = '<div class="chart-placeholder">Add doses to see simulation results</div>';
                 if (chart) {
                     chart.dispose();
@@ -1036,7 +1205,7 @@
 
             // Reset form
             resetForm();
-            saveDoses();
+            saveData();
             updateUI();
         }
 
@@ -1073,7 +1242,7 @@
                 editingDose = null;
                 resetForm();
             }
-            saveDoses();
+            saveData();
             updateUI();
         }
 
@@ -1083,7 +1252,7 @@
                 doses = [];
                 editingDose = null;
                 resetForm();
-                saveDoses();
+                saveData();
                 updateUI();
             }
         }
@@ -1154,6 +1323,161 @@
                     </div>
                 </div>
             `).join('');
+
+            const timeIndex = headers.findIndex(h => h.toLowerCase() === 'time');
+            const shotIndex = headers.findIndex(h => h.toLowerCase() === 'shot');
+            const baseDoseIndex = headers.findIndex(h => h.toLowerCase().includes('base dose'));
+            const clicksIndex = headers.findIndex(h => h.toLowerCase().includes('clicks'));
+
+            if (dateIndex === -1 || timeIndex === -1 || shotIndex === -1) {
+                throw new Error('CSV must contain Date, Time, and Shot columns');
+            }
+
+            for (let i = 1; i < lines.length; i++) {
+                const cells = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
+                
+                if (cells.length !== headers.length) continue;
+
+                const shotText = cells[shotIndex];
+                const dateText = cells[dateIndex];
+                const timeText = cells[timeIndex];
+                const baseDoseText = baseDoseIndex !== -1 ? cells[baseDoseIndex] : '';
+                const clicksText = clicksIndex !== -1 ? cells[clicksIndex] : '';
+
+                // Parse shot information to get actual dose
+                let actualDose = null;
+                if (shotText.includes('Mounjaro®') || shotText.includes('Zepbound®') || shotText.includes('Tirzepatide')) {
+                    const match = shotText.match(/(\d+\.?\d*)\s*mg/i);
+                    if (match) {
+                        actualDose = parseFloat(match[1]);
+                    }
+                }
+
+                if (!actualDose || !dateText || !timeText) continue;
+
+                // Parse base dose and clicks if available (our format)
+                let baseDose = actualDose;
+                let clicksUsed = 60;
+                
+                if (baseDoseText && clicksText) {
+                    // Our enhanced format
+                    baseDose = parseFloat(baseDoseText);
+                    clicksUsed = parseInt(clicksText);
+                    actualDose = parseFloat((baseDose * (clicksUsed / 60)).toFixed(2));
+                } else {
+                    // Try to infer from actual dose - find closest standard dose
+                    const standardDoses = [2.5, 5, 7.5, 10, 12.5, 15];
+                    let bestMatch = standardDoses[0];
+                    let bestDiff = Math.abs(actualDose - bestMatch);
+                    
+                    for (const dose of standardDoses) {
+                        const diff = Math.abs(actualDose - dose);
+                        if (diff < bestDiff) {
+                            bestMatch = dose;
+                            bestDiff = diff;
+                        }
+                    }
+                    
+                    baseDose = bestMatch;
+                    clicksUsed = Math.round((actualDose / baseDose) * 60);
+                    clicksUsed = Math.max(1, Math.min(60, clicksUsed)); // Clamp to valid range
+                }
+
+                // Parse date (handle various formats)
+                let parsedDate;
+                if (dateText.includes('/')) {
+                    const [month, day, year] = dateText.split('/');
+                    parsedDate = `${year.padStart(4, '20')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                } else if (dateText.includes('-')) {
+                    parsedDate = dateText;
+                } else {
+                    continue; // Skip if can't parse date
+                }
+
+                // Parse time
+                let parsedTime = timeText;
+                if (timeText.includes('AM') || timeText.includes('PM')) {
+                    // Convert 12-hour to 24-hour format
+                    const [time, period] = timeText.split(/\s+(AM|PM)/i);
+                    let [hours, minutes] = time.split(':').map(n => parseInt(n));
+                    if (period.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+                    if (period.toUpperCase() === 'AM' && hours === 12) hours = 0;
+                    parsedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                }
+
+                const datetime = `${parsedDate}T${parsedTime}`;
+                
+                // Check if dose already exists (only if not replacing)
+                if (!shouldReplace) {
+                    const existingDose = doses.find(d => d.datetime === datetime);
+                    if (existingDose) continue;
+                }
+
+                importedDoses.push({
+                    id: Date.now() + Math.random(),
+                    datetime: datetime,
+                    amount: actualDose,
+                    fullDosage: baseDose,
+                    clicksUsed: clicksUsed,
+                    displayDate: `${formatDate(parsedDate)} ${parsedTime}`
+                });
+            }
+
+            if (importedDoses.length === 0) {
+                throw new Error('No valid dose data found in CSV');
+            }
+
+            if (shouldReplace) {
+                doses = importedDoses;
+            } else {
+                doses.push(...importedDoses);
+            }
+            
+            saveData();
+            updateUI();
+
+            return importedDoses.length;
+        }
+
+        // Export CSV data
+        function exportCSV() {
+            if (doses.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const headers = ['Date', 'Shot', 'Time', 'Taken', 'Base Dose', 'Clicks', 'Recorded Weight (kg)'];
+            
+            const csvRows = [headers.join(',')];
+
+            doses.forEach(dose => {
+                const [date, time] = dose.datetime.split('T');
+                const weight = dose.bodyWeight ? dose.bodyWeight.toFixed(1) : '';
+                const shot = `Mounjaro® ${dose.amount.toFixed(2)}mg`;
+                
+                const row = [
+                    date,
+                    shot,
+                    time,
+                    'Yes', // Taken
+                    dose.fullDosage.toFixed(1),
+                    dose.clicksUsed,
+                ];
+                
+                csvRows.push(row.map(cell => `"${cell}"`).join(','));
+            });
+
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mounjaro-export-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         // Update entire UI
@@ -1180,13 +1504,111 @@
         elements.cancelEditBtn.addEventListener('click', cancelEdit);
         elements.clearAllBtn.addEventListener('click', clearAllDoses);
 
+        // Import/Export event listeners
+        elements.importFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const csvText = e.target.result;
+                    
+                    // Check if there's existing data
+                    if (doses.length > 0) {
+                        // Store the CSV data and show modal
+                        pendingImportData = csvText;
+                        elements.importModal.classList.remove('hidden');
+                    } else {
+                        // No existing data, import directly
+                        const importedCount = importCSV(csvText, false);
+                        showImportSuccess(importedCount);
+                    }
+                } catch (error) {
+                    showImportError(error.message);
+                }
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        });
+
+        // Modal event listeners
+        elements.modalCancel.addEventListener('click', () => {
+            elements.importModal.classList.add('hidden');
+            pendingImportData = null;
+        });
+
+        elements.modalAdd.addEventListener('click', () => {
+            try {
+                const importedCount = importCSV(pendingImportData, false);
+                elements.importModal.classList.add('hidden');
+                pendingImportData = null;
+                showImportSuccess(importedCount);
+            } catch (error) {
+                showImportError(error.message);
+            }
+        });
+
+        elements.modalReplace.addEventListener('click', () => {
+            try {
+                const importedCount = importCSV(pendingImportData, true);
+                elements.importModal.classList.add('hidden');
+                pendingImportData = null;
+                showImportSuccess(importedCount);
+            } catch (error) {
+                showImportError(error.message);
+            }
+        });
+
+        function showImportSuccess(count) {
+            elements.importStatus.textContent = `Successfully imported ${count} doses`;
+            elements.importStatus.className = 'import-status success';
+            elements.importStatus.classList.remove('hidden');
+            setTimeout(() => {
+                elements.importStatus.classList.add('hidden');
+            }, 5000);
+        }
+
+        function showImportError(message) {
+            elements.importStatus.textContent = `Import failed: ${message}`;
+            elements.importStatus.className = 'import-status error';
+            elements.importStatus.classList.remove('hidden');
+            setTimeout(() => {
+                elements.importStatus.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Drag and drop for file input
+        elements.fileInputWrapper.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            elements.fileInputLabel.classList.add('dragover');
+        });
+
+        elements.fileInputWrapper.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            elements.fileInputLabel.classList.remove('dragover');
+        });
+
+        elements.fileInputWrapper.addEventListener('drop', (e) => {
+            e.preventDefault();
+            elements.fileInputLabel.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                elements.importFile.files = files;
+                elements.importFile.dispatchEvent(new Event('change'));
+            }
+        });
+
+        elements.exportBtn.addEventListener('click', exportCSV);
+
         // Make functions globally accessible for onclick handlers
         window.editDose = editDose;
         window.removeDose = removeDose;
         window.adjustDate = adjustDate;
 
         // Initialize app
-        loadDoses();
+        loadData();
         resetForm();
     </script>
 </body>
