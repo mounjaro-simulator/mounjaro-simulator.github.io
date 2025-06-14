@@ -73,7 +73,7 @@
 
         @media (min-width: 900px) {
             .form-grid {
-                grid-template-columns: 2fr 2fr 0.8fr 1fr;
+                grid-template-columns: 2fr 2fr 1fr;
             }
         }
 
@@ -637,11 +637,6 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="body-weight">Body weight (kg)</label>
-                    <input type="number" id="body-weight" value="90" min="30" max="400" step="0.1" required>
-                </div>
-
                 <div class="form-group" style="justify-content: flex-end;">
                     <button id="add-dose-btn" class="btn btn-primary" style="height: 35px">Add Dose</button>
                 </div>
@@ -927,7 +922,6 @@
                         amount: parseFloat((parseFloat(elements.dosage.value) * (parseInt(elements.clicks.value) / 60)).toFixed(2)),
                         fullDosage: parseFloat(elements.dosage.value),
                         clicksUsed: parseInt(elements.clicks.value),
-                        bodyWeight: parseWeight(elements.bodyWeight.value || 90),
                         isPreview: true
                     };
                     allDoses.push(previewDose);
@@ -1323,7 +1317,20 @@
                     </div>
                 </div>
             `).join('');
+        }
 
+        // Import CSV data
+        function importCSV(csvText, shouldReplace = false) {
+            const lines = csvText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            if (lines.length < 2) {
+                throw new Error('CSV must have at least a header row and one data row');
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const importedDoses = [];
+
+            // Find column indices - support both our format and Shotsy format
+            const dateIndex = headers.findIndex(h => h.toLowerCase() === 'date');
             const timeIndex = headers.findIndex(h => h.toLowerCase() === 'time');
             const shotIndex = headers.findIndex(h => h.toLowerCase() === 'shot');
             const baseDoseIndex = headers.findIndex(h => h.toLowerCase().includes('base dose'));
@@ -1446,13 +1453,12 @@
                 return;
             }
 
-            const headers = ['Date', 'Shot', 'Time', 'Taken', 'Base Dose', 'Clicks', 'Recorded Weight (kg)'];
+            const headers = ['Date', 'Shot', 'Time', 'Taken', 'Base Dose', 'Clicks'];
             
             const csvRows = [headers.join(',')];
 
             doses.forEach(dose => {
                 const [date, time] = dose.datetime.split('T');
-                const weight = dose.bodyWeight ? dose.bodyWeight.toFixed(1) : '';
                 const shot = `Mounjaro® ${dose.amount.toFixed(2)}mg`;
                 
                 const row = [
@@ -1610,6 +1616,7 @@
         // Initialize app
         loadData();
         resetForm();
+        updateUI();
     </script>
 </body>
 
